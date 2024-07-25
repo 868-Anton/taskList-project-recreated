@@ -1,67 +1,281 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Refactoring and Improving Laravel Routes
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Route Model Binding
 
-## About Laravel
+### The Concept:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Route model binding **automatically fetches the model instance** based on the route parameter.
+- It simplifies the code by **removing the need to manually query the database in the route**.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Use Case:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- To automatically resolve the `Task` model based on the route parameter.
 
-## Learning Laravel
+### Code Snippet:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```php
+// Use route model binding to fetch the task
+Route::get('/tasks/{task}/edit', function (Task $task) {
+    return view('edit', [
+        'task' => $task
+    ]);
+})->name('tasks.edit');
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Code Example:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```php
+// routes/web.php
+use App\Models\Task;
+use Illuminate\Support\Facades\Route;
 
-## Laravel Sponsors
+Route::get('/tasks/{task}/edit', function (Task $task) {
+    return view('edit', [
+        'task' => $task
+    ]);
+})->name('tasks.edit');
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Route::get('/tasks/{task}', function (Task $task) {
+    return view('show', [
+        'task' => $task
+    ]);
+})->name('tasks.show');
+```
 
-### Premium Partners
+## Form Requests for Validation
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### The Concept:
 
-## Contributing
+- Form requests **encapsulate validation logic**, allowing you to reuse the same validation rules in multiple routes.
+- They provide a clean way to validate incoming data before the controller handles it.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Use Case:
 
-## Code of Conduct
+- To extract and reuse validation rules for creating and updating tasks.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Code Snippet:
 
-## Security Vulnerabilities
+```php
+// Create a form request for task validation
+php artisan make:request TaskRequest
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+// Define validation rules in the form request
+public function rules(): array
+{
+    return [
+        'title' => 'required|max:255',
+        'description' => 'required',
+        'long_description' => 'required'
+    ];
+}
+```
 
-## License
+### Code Example:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# taskList-project-recreated
+```php
+// app/Http/Requests/TaskRequest.php
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class TaskRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'long_description' => 'required'
+        ];
+    }
+}
+```
+
+## Using `create` and `update` Methods
+
+### The Concept:
+
+- The `create` and `update` methods simplify the process of saving models to the database.
+- They allow you to assign multiple attributes at once using mass assignment.
+
+### Use Case:
+
+- To create or update a `Task` model instance with a single line of code.
+
+### Code Snippet:
+
+```php
+// Use the create method for new tasks
+$task = Task::create($request->validated());
+
+// Use the update method for existing tasks
+$task->update($request->validated());
+```
+
+### Code Example:
+
+```php
+// routes/web.php
+use App\Http\Requests\TaskRequest;
+use App\Models\Task;
+
+Route::post('/tasks', function (TaskRequest $request) {
+    $task = Task::create($request->validated());
+
+    return redirect()->route('tasks.show', ['task' => $task->id])
+        ->with('success', 'Task created successfully!');
+})->name('tasks.store');
+
+Route::put('/tasks/{task}', function (Task $task, TaskRequest $request) {
+    $task->update($request->validated());
+
+    return redirect()->route('tasks.show', ['task' => $task->id])
+        ->with('success', 'Task updated successfully!');
+})->name('tasks.update');
+```
+
+## Fillable Properties for Mass Assignment
+
+### The Concept:
+
+- The `fillable` property specifies which attributes should be mass assignable.
+- It protects against mass assignment vulnerabilities by explicitly defining which attributes can be set.
+
+### Use Case:
+
+- To allow mass assignment for specific attributes of the `Task` model.
+
+### Code Snippet:
+
+```php
+// Define fillable properties in the model
+protected $fillable = ['title', 'description', 'long_description'];
+```
+
+### Code Example:
+
+```php
+// app/Models/Task.php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Task extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['title', 'description', 'long_description'];
+}
+```
+
+## Final Refactored Code
+
+### Updated Routes
+
+```php
+// routes/web.php
+use App\Http\Requests\TaskRequest;
+use App\Models\Task;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/tasks/{task}/edit', function (Task $task) {
+    return view('edit', [
+        'task' => $task
+    ]);
+})->name('tasks.edit');
+
+Route::get('/tasks/{task}', function (Task $task) {
+    return view('show', [
+        'task' => $task
+    ]);
+})->name('tasks.show');
+
+Route::post('/tasks', function (TaskRequest $request) {
+    $task = Task::create($request->validated());
+
+    return redirect()->route('tasks.show', ['task' => $task->id])
+        ->with('success', 'Task created successfully!');
+})->name('tasks.store');
+
+Route::put('/tasks/{task}', function (Task $task, TaskRequest $request) {
+    $task->update($request->validated());
+
+    return redirect()->route('tasks.show', ['task' => $task->id])
+        ->with('success', 'Task updated successfully!');
+})->name('tasks.update');
+```
+
+### Updated Task Model
+
+```php
+// app/Models/Task.php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Task extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['title', 'description', 'long_description'];
+}
+```
+
+### Updated Blade Templates
+
+```php
+// resources/views/edit.blade.php
+@extends('layouts.app')
+
+@section('title', 'Edit Task')
+
+@section('styles')
+  <style>
+    .error-message {
+      color: red;
+      font-size: 0.8rem;
+    }
+  </style>
+@endsection
+
+@section('content')
+  <form method="POST" action="{{ route('tasks.update', ['task' => $task->id]) }}">
+    @csrf
+    @method('PUT')
+    <div>
+      <label for="title">Title</label>
+      <input type="text" name="title" id="title" value="{{ old('title', $task->title) }}" />
+      @error('title')
+        <p class="error-message">{{ $message }}</p>
+      @enderror
+    </div>
+
+    <div>
+      <label for="description">Description</label>
+      <textarea name="description" id="description" rows="5">{{ old('description', $task->description) }}</textarea>
+      @error('description')
+        <p class="error-message">{{ $message }}</p>
+      @enderror
+    </div>
+
+    <div>
+      <label for="long_description">Long Description</label>
+      <textarea name="long_description" id="long_description" rows="10">{{ old('long_description', $task->long_description) }}</textarea>
+      @error('long_description')
+        <p class="error-message">{{ $message }}</p>
+      @enderror
+    </div>
+
+    <div>
+      <button type="submit">Edit Task</button>
+    </div>
+  </form>
+@endsection
+```
