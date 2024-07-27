@@ -22,4 +22,13 @@
   <p>No Tasks available</p>
 @endforelse
 
+@if ($tasks->count())
+<div>
+  <nav>
+    {{ $tasks->links() }}
+  </nav>
+</div>
+@endif
+  
+
 @endsection
