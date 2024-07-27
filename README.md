@@ -1,94 +1,77 @@
-## Pagination
+# Implementing Task Editing and Completion Toggling in Laravel
 
-## Implementing Pagination in Laravel
+## Adding an Edit Link
 
-### The Concept:
+### **The Concept:**
 
-- Pagination divides the results into pages, making it easier to navigate large sets of data.
-- Laravel provides a simple and efficient way to implement pagination using the `paginate` method.
-- The `paginate` method generates pagination links and handles query parameters for page navigation.
+- Add a link to the task show page that redirects to the task edit form.
 
-### Use Case:
+### **Use Case:**
 
-- To paginate the list of tasks so that only a certain number of tasks are displayed per page, with navigation links to access other pages.
+- To navigate to the task editing form from the task details page.
 
-### Step-by-Step Guide:
-
-1. **Update the Route to Use Pagination:**
-    - Replace the `get` method with the `paginate` method to divide the results into pages.
-2. **Display Pagination Links in Blade Template:**
-    - Use the `links` method to generate pagination links in the view.
-
-### Code Example:
-
-1. **Update the Route to Use Pagination:**
-    
-    ```php
-    // routes/web.php
-    use App\\Models\\Task;
-    use Illuminate\\Support\\Facades\\Route;
-    
-    Route::get('/tasks', function () {
-        return view('index', [
-            'tasks' => Task::latest()->paginate(10)
-        ]);
-    })->name('tasks.index');
-    
-    ```
-    
-2. **Display Pagination Links in Blade Template:**
-    
-    ```php
-    // resources/views/index.blade.php
-    @extends('layouts.app')
-    
-    @section('title', 'The list of tasks')
-    
-    @section('content')
-      @forelse ($tasks as $task)
-        <div>
-          <a href="{{ route('tasks.show', ['task' => $task->id]) }}">{{ $task->title }}</a>
-        </div>
-      @empty
-        <div>There are no tasks!</div>
-      @endforelse
-    
-      @if ($tasks->count())
-        <nav>
-          {{ $tasks->links() }}
-        </nav>
-      @endif
-    @endsection
-    
-    ```
-    
-
-## Final Refactored Code:
-
-### Routes Configuration:
+### **Code Snippet:**
 
 ```php
-// routes/web.php
-use App\\Models\\Task;
-use Illuminate\\Support\\Facades\\Route;
-
-Route::get('/tasks', function () {
-    return view('index', [
-        'tasks' => Task::latest()->paginate(10)
-    ]);
-})->name('tasks.index');
+<div>
+  <a href="{{ route('tasks.edit', ['task' => $task]) }}">Edit</a>
+</div>
 
 ```
 
-### Blade Template for Listing Tasks:
+### **Code Example:**
+
+```php
+// resources/views/show.blade.php
+
+<p>{{ $task->created_at }}</p>
+<p>{{ $task->updated_at }}</p>
+
+<p>
+  @if ($task->completed)
+    Completed
+  @else
+    Not completed
+  @endif
+</p>
+
+<div>
+  <a href="{{ route('tasks.edit', ['task' => $task]) }}">Edit</a>
+</div>
+
+```
+
+## Adding a New Task Link
+
+### **The Concept:**
+
+- Add a link on the main task index page to navigate to the task creation form.
+
+### **Use Case:**
+
+- To allow users to quickly add a new task.
+
+### **Code Snippet:**
+
+```php
+<div>
+  <a href="{{ route('tasks.create') }}">Add Task!</a>
+</div>
+
+```
+
+### **Code Example:**
 
 ```php
 // resources/views/index.blade.php
-@extends('layouts.app')
 
 @section('title', 'The list of tasks')
 
 @section('content')
+  <div>
+    <a href="{{ route('tasks.create') }}">Add Task!</a>
+  </div>
+
   @forelse ($tasks as $task)
     <div>
       <a href="{{ route('tasks.show', ['task' => $task->id]) }}">{{ $task->title }}</a>
@@ -106,11 +89,135 @@ Route::get('/tasks', function () {
 
 ```
 
+## Implementing Task Completion Toggling
+
+### **The Concept:**
+
+- Create a route to toggle the completion status of a task.
+- Add a form in the task details view to toggle the completion status.
+
+### **Use Case:**
+
+- To mark a task as completed or not completed.
+
+### **Code Snippet:**
+
+```php
+// Define the route
+Route::put('tasks/{task}/toggle-complete', function (Task $task) {
+    $task->toggleComplete();
+
+    return redirect()->back()->with('success', 'Task updated successfully!');
+})->name('tasks.toggle-complete');
+
+// Add method to the model
+public function toggleComplete()
+{
+    $this->completed = !$this->completed;
+    $this->save();
+}
+
+// Add form in the task details view (show)
+<div>
+  <form method="POST" action="{{ route('tasks.toggle-complete', ['task' => $task]) }}">
+    @csrf
+    @method('PUT')
+    <button type="submit">
+      Mark as {{ $task->completed ? 'not completed' : 'completed' }}
+    </button>
+  </form>
+</div>
+
+```
+
+### **Code Example:**
+
+1. **Task Model:**
+    
+    ```php
+    // app/Models/Task.php
+    namespace App\\Models;
+    
+    use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;
+    use Illuminate\\Database\\Eloquent\\Model;
+    
+    class Task extends Model
+    {
+        use HasFactory;
+    
+        protected $fillable = ['title', 'description', 'long_description'];
+    
+        public function toggleComplete()
+        {
+            $this->completed = !$this->completed;
+            $this->save();
+        }
+    }
+    
+    ```
+    
+2. **Routes Configuration:**
+    
+    ```php
+    // routes/web.php
+    use App\\Models\\Task;
+    use Illuminate\\Support\\Facades\\Route;
+    
+    Route::put('tasks/{task}/toggle-complete', function (Task $task) {
+        $task->toggleComplete();
+    
+        return redirect()->back()->with('success', 'Task updated successfully!');
+    })->name('tasks.toggle-complete');
+    
+    ```
+    
+3. **Task Details View:**
+    
+    ```php
+    // resources/views/show.blade.php
+    
+    <p>{{ $task->created_at }}</p>
+    <p>{{ $task->updated_at }}</p>
+    
+    <p>
+      @if ($task->completed)
+        Completed
+      @else
+        Not completed
+      @endif
+    </p>
+    
+    <div>
+      <a href="{{ route('tasks.edit', ['task' => $task]) }}">Edit</a>
+    </div>
+    
+    <div>
+      <form method="POST" action="{{ route('tasks.toggle-complete', ['task' => $task]) }}">
+        @csrf
+        @method('PUT')
+        <button type="submit">
+          Mark as {{ $task->completed ? 'not completed' : 'completed' }}
+        </button>
+      </form>
+    </div>
+    
+    <div>
+      <form action="{{ route('tasks.destroy', ['task' => $task]) }}" method="POST">
+        @csrf
+        @method('DELETE')
+        <button type="submit">Delete</button>
+      </form>
+    </div>
+    
+    ```
+    
+
 ### Explanation:
 
-- **Route Update:** In the route definition, we replaced the `get` method with the `paginate` method. We passed `10` as an argument to the `paginate` method to specify that we want 10 tasks per page.
-- **Blade Template Update:** In the Blade template, we used the `links` method on the `$tasks` variable to generate pagination links. This method automatically handles the creation of pagination links and manages the current page state.
+- **Edit Link:** Adds an edit link to the task details page using the `route` helper.
+- **Add Task Link:** Adds a link to the main task index page to create a new task.
+- **Toggle Complete:** Adds a route and a method to the `Task` model to toggle the completion status of a task. A form is added to the task details view to trigger the toggle.
 
 ### Conclusion:
 
-This guide covers the implementation of pagination in Laravel. Pagination helps in managing large sets of data by dividing them into manageable pages, and Laravel's built-in pagination features make this process straightforward and efficient. The `paginate` method simplifies the creation and navigation of paginated results, and the `links` method in Blade generates the necessary navigation links.
+This guide covers how to add links for editing and creating tasks and implement a feature to toggle the completion status of a task. Using route model binding and method spoofing in forms ensures a clean and efficient approach to managing task states in Laravel.
