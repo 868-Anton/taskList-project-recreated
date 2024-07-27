@@ -20,18 +20,17 @@
 
 @forelse ($tasks as $task )
   <div>
-    <a href="{{ route('tasks.show',['task'=>$task->id]) }}">{{ $task->title }}</a>
+    <a href="{{ route('tasks.show',['task'=>$task->id]) }}" @class(['line-through'=>$task->completed])>{{ $task->title }}</a>
+    
   </div>
   @empty
   <p>No Tasks available</p>
 @endforelse
 
 @if ($tasks->count())
-<div>
-  <nav>
+  <nav class="mt-10">
     {{ $tasks->links() }}
   </nav>
-</div>
 @endif
   
 
