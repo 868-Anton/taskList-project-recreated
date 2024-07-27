@@ -13,6 +13,10 @@
     <p>There are no Tasks</p>
 @endif --}}
 
+<div>
+  <a href="{{ route('tasks.create') }}">Add Task!</a>
+</div>
+
 
 @forelse ($tasks as $task )
   <div>
