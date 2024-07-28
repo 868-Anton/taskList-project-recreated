@@ -13,6 +13,17 @@
 .link{
   @apply font-medium text-gray-700 underline decoration-pink-500;
 }
+
+ input, textarea{
+ @apply shadow-sm appearance-none border w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none;
+}
+.error{
+  @apply  text-red-700 text-sm;
+}
+
+.flash-message{
+  @apply mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700;
+}
 </style>
 {{-- blade-formatter-enable --}}
   @yield('styles')
