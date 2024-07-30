@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <title>Laravel Task List App</title>
+  <script src="//unpkg.com/alpinejs" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
+
 
 {{-- blade-formatter-disable --}}
 <style type="text/tailwindcss">
@@ -22,25 +24,48 @@
 }
 
 .flash-message{
-  @apply mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700;
+  @apply relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-lg text-green-700;  
 }
+.close-btn {
+    @apply absolute top-0 bottom-0 right-0 px-4 py-3;
+  }
+  .close-icon {
+    @apply h-6 w-6 cursor-pointer;
+  }
 </style>
 {{-- blade-formatter-enable --}}
-  @yield('styles')
+
+@yield('styles')
 </head>
 
 <body class="container mx-auto mt-10 mb-10 max-w-lg">
-<h1 class="mb-4 text-2xl">@yield('title')</h1>
+  <h1 class="mb-4 text-2xl">@yield('title')</h1>
+  
+  <div x-data="{ flash: true }">
+    @if (session()->has('Success'))
+      
+      <div x-show="flash"
+        class="flash-message"
+        role="alert">
+        
+        <strong class="font-bold">Success!</strong>
+        
+        <div>{{ session('Success') }}</div>
+        
+        <span class="close-btn">
 
-<div>
+          <svg xmlns="<http://www.w3.org/2000/svg>" fill="none" viewBox="0 0 24 24"
+            stroke-width="1.5" @click="flash = false"
+            stroke="currentColor" class="close-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          
+        </span>
+        
+      </div>
+    @endif
 
-  @if (session()->has('Success'))
-    <div>{{ session('Success') }}</div>
-  @endif
-
-  @yield('content')
-</div>
-
-
+    @yield('content')
+  </div>
 </body>
 </html>

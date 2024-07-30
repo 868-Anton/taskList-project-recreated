@@ -1,223 +1,178 @@
-# Implementing Task Editing and Completion Toggling in Laravel
+# Styling Flash Messages with Tailwind CSS and Adding Interactivity with Alpine.js
 
-## Adding an Edit Link
+## Steps and Code Explanation:
 
-### **The Concept:**
+### **Add Tailwind and Alpine.js to the Project:**
 
-- Add a link to the task show page that redirects to the task edit form.
-
-### **Use Case:**
-
-- To navigate to the task editing form from the task details page.
-
-### **Code Snippet:**
-
-```php
-<div>
-  <a href="{{ route('tasks.edit', ['task' => $task]) }}">Edit</a>
-</div>
-
-```
-
-### **Code Example:**
-
-```php
-// resources/views/show.blade.php
-
-<p>{{ $task->created_at }}</p>
-<p>{{ $task->updated_at }}</p>
-
-<p>
-  @if ($task->completed)
-    Completed
-  @else
-    Not completed
-  @endif
-</p>
-
-<div>
-  <a href="{{ route('tasks.edit', ['task' => $task]) }}">Edit</a>
-</div>
-
-```
-
-## Adding a New Task Link
-
-### **The Concept:**
-
-- Add a link on the main task index page to navigate to the task creation form.
-
-### **Use Case:**
-
-- To allow users to quickly add a new task.
-
-### **Code Snippet:**
-
-```php
-<div>
-  <a href="{{ route('tasks.create') }}">Add Task!</a>
-</div>
-
-```
-
-### **Code Example:**
-
-```php
-// resources/views/index.blade.php
-
-@section('title', 'The list of tasks')
-
-@section('content')
-  <div>
-    <a href="{{ route('tasks.create') }}">Add Task!</a>
-  </div>
-
-  @forelse ($tasks as $task)
-    <div>
-      <a href="{{ route('tasks.show', ['task' => $task->id]) }}">{{ $task->title }}</a>
-    </div>
-  @empty
-    <div>There are no tasks!</div>
-  @endforelse
-
-  @if ($tasks->count())
-    <nav>
-      {{ $tasks->links() }}
-    </nav>
-  @endif
-@endsection
-
-```
-
-## Implementing Task Completion Toggling
-
-### **The Concept:**
-
-- Create a route to toggle the completion status of a task.
-- Add a form in the task details view to toggle the completion status.
-
-### **Use Case:**
-
-- To mark a task as completed or not completed.
-
-### **Code Snippet:**
-
-```php
-// Define the route
-Route::put('tasks/{task}/toggle-complete', function (Task $task) {
-    $task->toggleComplete();
-
-    return redirect()->back()->with('success', 'Task updated successfully!');
-})->name('tasks.toggle-complete');
-
-// Add method to the model
-public function toggleComplete()
-{
-    $this->completed = !$this->completed;
-    $this->save();
-}
-
-// Add form in the task details view (show)
-<div>
-  <form method="POST" action="{{ route('tasks.toggle-complete', ['task' => $task]) }}">
-    @csrf
-    @method('PUT')
-    <button type="submit">
-      Mark as {{ $task->completed ? 'not completed' : 'completed' }}
-    </button>
-  </form>
-</div>
-
-```
-
-### **Code Example:**
-
-1. **Task Model:**
+- Use a CDN to include Tailwind CSS and **Alpine.js** in the project.
     
-    ```php
-    // app/Models/Task.php
-    namespace App\\Models;
-    
-    use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;
-    use Illuminate\\Database\\Eloquent\\Model;
-    
-    class Task extends Model
-    {
-        use HasFactory;
-    
-        protected $fillable = ['title', 'description', 'long_description'];
-    
-        public function toggleComplete()
-        {
-            $this->completed = !$this->completed;
-            $this->save();
-        }
-    }
-    
-    ```
-    
-2. **Routes Configuration:**
-    
-    ```php
-    // routes/web.php
-    use App\\Models\\Task;
-    use Illuminate\\Support\\Facades\\Route;
-    
-    Route::put('tasks/{task}/toggle-complete', function (Task $task) {
-        $task->toggleComplete();
-    
-        return redirect()->back()->with('success', 'Task updated successfully!');
-    })->name('tasks.toggle-complete');
-    
-    ```
-    
-3. **Task Details View:**
-    
-    ```php
-    // resources/views/show.blade.php
-    
-    <p>{{ $task->created_at }}</p>
-    <p>{{ $task->updated_at }}</p>
-    
-    <p>
-      @if ($task->completed)
-        Completed
-      @else
-        Not completed
-      @endif
-    </p>
-    
-    <div>
-      <a href="{{ route('tasks.edit', ['task' => $task]) }}">Edit</a>
-    </div>
-    
-    <div>
-      <form method="POST" action="{{ route('tasks.toggle-complete', ['task' => $task]) }}">
-        @csrf
-        @method('PUT')
-        <button type="submit">
-          Mark as {{ $task->completed ? 'not completed' : 'completed' }}
-        </button>
-      </form>
-    </div>
-    
-    <div>
-      <form action="{{ route('tasks.destroy', ['task' => $task]) }}" method="POST">
-        @csrf
-        @method('DELETE')
-        <button type="submit">Delete</button>
-      </form>
-    </div>
+    ```html
+    {{-- resources/views/layouts/app.blade.php --}}
+    <head>
+      <title>Laravel 10 Task List App</title>
+      <script src="<https://cdn.tailwindcss.com>"></script>
+      <script src="//unpkg.com/alpinejs" defer></script>
+      @yield('styles')
+    </head>
     
     ```
     
 
-### Explanation:
+### **Define the Flash Message Styles:**
 
-- **Edit Link:** Adds an edit link to the task details page using the `route` helper.
-- **Add Task Link:** Adds a link to the main task index page to create a new task.
-- **Toggle Complete:** Adds a route and a method to the `Task` model to toggle the completion status of a task. A form is added to the task details view to trigger the toggle.
+- Use Tailwind CSS classes to style the flash message box.
+- Ensure the message is clearly visible with appropriate padding, margin, border, and background color.
+    
+    ```html
+    {{-- blade-formatter-disable --}}
+    <style type="text/tailwindcss">
+      .btn {
+        @apply rounded-md px-2 py-1 text-center font-medium text-slate-700 shadow-sm ring-1 ring-slate-700/10 hover:bg-slate-50;
+      }
+      .link {
+        @apply font-medium text-gray-700 underline decoration-pink-500;
+      }
+      label {
+        @apply block uppercase text-slate-700 mb-2;
+      }
+      input,
+      textarea {
+        @apply shadow-sm appearance-none border w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none;
+      }
+      .error {
+        @apply text-red-500 text-sm;
+      }
+      .flash-message {
+        @apply relative mb-4 rounded border border-green-400 bg-green-100 px-4 py-3 text-lg text-green-700;
+      }
+      .close-btn {
+        @apply absolute top-0 bottom-0 right-0 px-4 py-3;
+      }
+      .close-icon {
+        @apply h-6 w-6 cursor-pointer;
+      }
+    </style>
+    {{-- blade-formatter-enable --}}
+    
+    ```
+    
 
-### Conclusion:
+### **Add Interactivity with Alpine.js:**
 
-This guide covers how to add links for editing and creating tasks and implement a feature to toggle the completion status of a task. Using route model binding and method spoofing in forms ensures a clean and efficient approach to managing task states in Laravel.
+- Use Alpine.js to control the visibility of the flash message.
+- Implement a close button to allow users to dismiss the flash message.
+    
+    ```php
+    {{-- resources/views/layouts/app.blade.php --}}
+    <body class="container mx-auto mt-10 mb-10 max-w-lg">
+      <h1 class="mb-4 text-2xl">@yield('title')</h1>
+      
+      <div x-data="{ flash: true }">
+        @if (session()->has('success'))
+          
+          <div x-show="flash"
+            class="flash-message"
+            role="alert">
+            
+            <strong class="font-bold">Success!</strong>
+            
+            <div>{{ session('success') }}</div>
+            
+            <span class="close-btn">
+    
+              <svg xmlns="<http://www.w3.org/2000/svg>" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" @click="flash = false"
+                stroke="currentColor" class="close-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              
+            </span>
+            
+          </div>
+        @endif
+    
+        @yield('content')
+      </div>
+    </body>
+    
+    ```
+    
+
+## More on Adding Interactivity with Alpine.js
+
+## **Add Close Button**
+
+- Add a close button using an SVG element.
+
+```php
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+stroke-width="1.5" @click="flash = false"
+stroke="currentColor" class="h-6 w-6 cursor-pointer">
+<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+</svg>
+```
+
+## **Include Alpine.js**
+
+- Add the Alpine.js library to the project.
+
+```php
+<script src="//unpkg.com/alpinejs" defer></script>
+```
+
+## **Add Accessibility Attribute**
+
+- Add a role attribute with the value "alert" to the flash message for screen readers.
+
+```php
+role = "alert" (container) class = "relative mb-10..."
+```
+
+## **Positioning Elements**
+
+- Make the container div relative and the close button absolute.
+
+```php
+<span class="**absolute** **top-0 bottom-0 right-0 px-4 py-3**">
+
+	<svg xmlns="http://www.w3.org/2000/svg" 
+	fill="none" 
+	viewBox="0 0 24 24"
+	stroke-width="1.5" 
+	@click="flash = false"
+	stroke="currentColor" 
+	class="h-6 w-6 cursor-pointer">
+	<path stroke-linecap="round" 
+	stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+	</svg>
+	
+</span>
+```
+
+## **Add Alpine.js Directives**
+
+- Use the `x-data` directive to define a new Alpine component and initialize the flash variable.
+
+```php
+<div x-data="{flash:true}">
+```
+
+- Use the `x-show` directive to conditionally display the flash message based on the flash variable.
+- 
+
+```php
+<div x-data="{flash:true}">
+	**<div x-show="flash">**
+	strong
+	div
+	span
+	svg
+	</div>
+</div>
+```
+
+- Add an `@click` event handler to the close button to set the flash variable to false and hide the message.
+
+```php
+@click="flash = false"
+```
